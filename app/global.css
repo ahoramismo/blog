@@ -18,6 +18,18 @@
 }
 
 @media (prefers-color-scheme: dark) {
+  .shiki,
+  .shiki span {
+    color: var(--shiki-dark) !important;
+    background-color: var(--shiki-dark-bg) !important;
+    /* Optional, if you also want font styles */
+    font-style: var(--shiki-dark-font-style) !important;
+    font-weight: var(--shiki-dark-font-weight) !important;
+    text-decoration: var(--shiki-dark-text-decoration) !important;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
   :root {
     --sh-class: #4c97f8;
     --sh-identifier: white;
@@ -50,6 +62,33 @@ html {
 .prose a {
   @apply underline transition-all decoration-neutral-400 dark:decoration-neutral-600 underline-offset-2 decoration-[0.1em];
 }
+
+/* Remove underline for footnote references */
+.prose a[data-footnote-ref="true"], .prose a[data-footnote-backref] {
+  @apply no-underline decoration-transparent underline-offset-0;
+}
+.prose table {
+  @apply border-separate border-spacing-0 w-full text-sm;
+  border-collapse: separate; /* optional */
+}
+
+.prose th,
+.prose td {
+  @apply px-4 py-2 text-left border-b border-neutral-200 dark:border-neutral-700;
+}
+
+.prose th {
+  @apply font-semibold bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100;
+}
+
+.prose tr:nth-child(even) td {
+  @apply bg-neutral-50/50 dark:bg-neutral-800/20; 
+}
+
+.prose tr:hover td {
+  @apply bg-neutral-100/30 dark:bg-neutral-700/20;
+}
+
 
 .prose .anchor:after {
   @apply text-neutral-300 dark:text-neutral-700;
@@ -104,7 +143,7 @@ html {
 }
 
 .prose strong {
-  @apply font-medium;
+  @apply font-bold;
 }
 
 .prose ul {
