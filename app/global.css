@@ -17,6 +17,9 @@
   --sh-entity: #e25a1c;
 }
 
+.shiki {
+  margin: 1em 0;
+}
 @media (prefers-color-scheme: dark) {
   .shiki,
   .shiki span {
@@ -131,16 +134,17 @@ html {
 }
 
 .prose h2 {
-  @apply text-xl font-medium tracking-tight mt-6 mb-2;
+  @apply text-3xl font-medium tracking-tight mt-6 mb-2;
 }
 
 .prose h3 {
-  @apply text-xl font-medium tracking-tight mt-6 mb-2;
+  @apply text-2xl font-medium tracking-tight mt-6 mb-2;
 }
 
 .prose h4 {
-  @apply text-lg font-medium tracking-tight mt-6 mb-2;
+  @apply text-xl font-medium tracking-tight mt-6 mb-2;
 }
+
 
 .prose strong {
   @apply font-bold;
