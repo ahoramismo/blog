@@ -1,0 +1,35 @@
+---
+title: 'Implementing Some Typescript Utility Types'
+publishedAt: '2025-09-08'
+summary: 'typescript challenges'
+draft: true
+---
+
+
+Hi, In this post, I'm going to implement some of the typescript's built-in utility types from scratch. Why would I do this? Because I believe the best way to learn something is seeing what's going on under the hood.
+
+
+## Pick
+The [Pick](https://www.typescriptlang.org/docs/handbook/utility-types.html#picktype-keys) is a utility type that picks only keys explicitly specified.
+
+### Usage
+```typescript
+interface Person {
+  name: string;
+  age: number;
+}
+
+type PersonWithOnlyAge = Pick<Person, 'age'>; // { age: string }
+```
+
+### Do it yourself
+```typescript
+type MyPick<T, K extends keyof T> = {
+  [k in K]: T[k]
+}
+```
+
+
+
+## References
+- http://typescriptlang.org/play
