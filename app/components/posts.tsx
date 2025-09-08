@@ -6,6 +6,7 @@ export function BlogPosts() {
 
   return (
     <div>
+      {allBlogs.length === 0 && <div>Nothing to see here yet. Please wait!</div>}
       {allBlogs
         .sort((a, b) => {
           if (
