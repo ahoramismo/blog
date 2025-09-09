@@ -20,6 +20,7 @@
 .shiki {
   margin: 1em 0;
 }
+
 @media (prefers-color-scheme: dark) {
   .shiki,
   .shiki span {
@@ -110,6 +111,11 @@ html {
   @apply px-1 py-0.5 rounded-lg;
 }
 
+.prose code:not(pre > code) {
+  @apply bg-neutral-200 dark:bg-neutral-700 rounded-sm;
+  font-size: 0.9em;
+}
+
 .prose pre code {
   @apply p-0;
   border: initial;
@@ -144,7 +150,6 @@ html {
 .prose h4 {
   @apply text-xl font-medium tracking-tight mt-6 mb-2;
 }
-
 
 .prose strong {
   @apply font-bold;
