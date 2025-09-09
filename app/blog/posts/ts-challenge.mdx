@@ -2,14 +2,14 @@
 title: 'Implementing Some Typescript Utility Types'
 publishedAt: '2025-09-08'
 summary: 'typescript challenges'
-draft: true
 ---
 
 
-Hi, In this post, I'm going to implement some of the typescript's built-in utility types from scratch. Why would I do this? Because I believe the best way to learn something is seeing what's going on under the hood.
+In this post, I’ll walk through how some of TypeScript’s built-in utility types are implemented under the hood, along with a few examples inspired by [TypeScript challenges](https://typescriptpro.com/challenges).  
+The reason for doing this is simple: I believe one of the best ways to truly understand TypeScript is to peek behind the curtain and see how these utility types are constructed. By breaking them down step by step, we’ll get a much deeper understanding of mapped types, conditional types, and inference.  
 
 
-## Pick
+## 1. Pick
 The [Pick](https://www.typescriptlang.org/docs/handbook/utility-types.html#picktype-keys) is a utility type that picks only keys explicitly specified.
 
 ### Usage
@@ -22,14 +22,142 @@ interface Person {
 type PersonWithOnlyAge = Pick<Person, 'age'>; // { age: string }
 ```
 
-### Do it yourself
+### Answer
+- `keyof T` resolves to an union type of the object T's keys.
+- here, `K extends keyof T` constrains the second argument to be a subtype of `keyof T`
+- `[Key in K]` is the typescript's [mapped type](https://www.typescriptlang.org/docs/handbook/2/mapped-types.html).
 ```typescript
 type MyPick<T, K extends keyof T> = {
-  [k in K]: T[k]
+  [Key in K]: T[Key]
+}
+```
+
+## 2. Readonly
+### Usage
+```typescript
+interface Todo {
+  title: string;
+}
+ 
+const todo: Readonly<Todo> = {
+  title: "Delete inactive users",
+};
+ 
+todo.title = "Hello"; // error: Cannot assign to 'title' because it is a read-only property.
+```
+
+### Answer
+- easier than the Pick. you can just add `readonly` modifier in front of the key.
+```typescript
+type MyReadonly<T> = {
+  readonly [Key in K]: T[Key]
+}
+```
+
+## 3. Exclude
+### Usage
+
+```typescript
+type Result = Exclude<'a' | 'b' | 'c', 'a'> // 'b' | 'c'
+```
+
+### Answer
+- `Exclude` removes from T all members that are assignable to U.
+- Conditional types in TypeScript are distributive over unions.
+  - For example, it works like this. 
+  - `'a' extends 'a'` is `true`, so `never`
+  - `'b' extends 'a'` is `false`, so `'b'`
+  - `'c' extends 'a'` is `false`, so `'c'`
+  - putting together it yields `'b' | 'c'`
+- FYI, `T extends U` can be read as "is `T` assignable to `U`?"
+- The key point: when `T` is a union (`'a' | 'b' | 'c'`), TypeScript automatically distributes the conditional check to each member of the union.
+
+```typescript
+type MyExclude<T, U> = T extends U ? never : T;
+```
+
+## 4. Parameters
+[Parameter\<T\>](https://www.typescriptlang.org/docs/handbook/utility-types.html#parameterstype) extracts the function parameters in a tuple.
+
+### Usage
+
+```typescript
+function foo(arg1: string, arg2: number): void {}
+
+type A = Parameters<typeof foo> // expected to be [arg1: string, arg2: number]
+```
+
+### Answer
+- Constraint `<F extends (...args: any[]) => any>` ensures you don't accidentally pass non-functions.
+- Conditional type `F extends (...args: infer P) => any` tries to match a function signature, where `P` is a tuple of parameters when matched.
+```typescript
+
+type MyParameters<F extends (...args: any[]) => any> = 
+  F extends (...args: infer P) => any ? P : never;
+```
+
+## 5. Omit
+[Omit\<T\>](https://www.typescriptlang.org/docs/handbook/utility-types.html#https://www.typescriptlang.org/docs/handbook/utility-types.html#omittype-keys)
+
+### Usage
+
+```typescript
+interface Todo {
+  title: string
+  description: string
+  completed: boolean
+}
+
+type TodoPreview = Omit<Todo, 'description' | 'title'>
+
+const todo: TodoPreview = {
+  completed: false,
+}
+```
+
+### Answer
+- Constraint `<T, K extends keyof T>` ensures that `K` must be valid keys of `T`
+- In a mapped type, you normally write `[Key in keyof T]` to iterate over all property of `T`.
+- `as` clause lets you `remap` or `filter` keys.
+  - So, `Key extends K ? never : Key` means:
+  - If `Key` is in `K`, remap it to `never` (which removes the property).
+  - Otherwise, keep it as `Key`.
+```typescript
+type MyOmit<T, K extends keyof T> = {
+  [Key in keyof T as Key extends K ? never : Key]: T[Key]
 }
 ```
 
 
+## 6. First Item of Array
+
+### Usage
+```typescript
+type arr1 = ['a', 'b', 'c']
+type arr2 = [3, 2, 1]
+
+type head1 = First<arr1> // expected to be 'a'
+type head2 = First<arr2> // expected to be 3
+  ```
+
+### Answer
+- `T extends unknown[]` constrains the generic type `T` so it must be an array (tuple).
+- The `infer` keyword lets us capture a type in a conditional type. It can only be used inside a conditional type.
+- `T extends [infer First, ...infer _Rest]` means: if `T` is a tuple with at least one element, extract its first element type as First; otherwise the condition fails.
+
+```typescript
+type First<T extends unknown[]> = T extends [infer First, ...infer _Rest] ? First : never;
+```
+
+## Conclusion
+We’ve re-implemented several of TypeScript’s most commonly used utility types — `Pick`, `Readonly`, `Exclude`, `Parameters`, `Omit`, and even a challenge-style type for extracting the first element of an array.  
+
+While you’ll often use these built-ins directly, re-implementing them is a powerful exercise. It forces you to think about how TypeScript’s type system actually works and makes it easier to create your own custom utility types when needed.  
+
+If you’d like to practice further, I recommend exploring more of the [TypeScript challenges](https://typescriptpro.com/challenges). They’re a great way to push your understanding of the type system even deeper.
+
+Thank you for reading!
 
 ## References
-- http://typescriptlang.org/play
+- https://typescriptpro.com/challenges
+- https://typescriptlang.org/play
