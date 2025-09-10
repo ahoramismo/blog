@@ -33,6 +33,8 @@ type MyPick<T, K extends keyof T> = {
 ```
 
 ## 2. Readonly
+Constructs a type where all properties are set to `readonly`. 
+
 ### Usage
 ```typescript
 interface Todo {
@@ -55,6 +57,7 @@ type MyReadonly<T> = {
 ```
 
 ## 3. Exclude
+Constructs a type by excluding from union type `T` all union members that are assignable to `U`.
 ### Usage
 
 ```typescript
@@ -97,7 +100,7 @@ type MyParameters<F extends (...args: any[]) => any> =
 ```
 
 ## 5. Omit
-[Omit\<T\>](https://www.typescriptlang.org/docs/handbook/utility-types.html#https://www.typescriptlang.org/docs/handbook/utility-types.html#omittype-keys)
+[Omit\<T\>](https://www.typescriptlang.org/docs/handbook/utility-types.html#https://www.typescriptlang.org/docs/handbook/utility-types.html#omittype-keys) Constructs a type by picking all properties from `T` and then removing keys `K`.
 
 ### Usage
 
@@ -130,7 +133,8 @@ type MyOmit<T, K extends keyof T> = {
 
 
 ## 6. First Item of Array
-
+(Technically not a built-in utility type, but a common challenge.)
+Extracts the first element type from an array or tuple `T`.
 ### Usage
 ```typescript
 type arr1 = ['a', 'b', 'c']
