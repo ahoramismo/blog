@@ -1,0 +1,165 @@
+---
+title: 'Understanding useEffectEvent in React 19'
+publishedAt: '2025-10-25'
+summary: 'A deep dive into the new useEffectEvent hook in React 19 — what problem it solves and how to use it effectively.'
+---
+
+React **19.2.0** introduced a new hook called `useEffectEvent`.
+In this post, we'll walk through a practical example to understand why this hook exists and how it improves real-world React code.
+
+---
+
+## 🧠 What is `useEffectEvent`?
+
+`useEffectEvent` is a new React Hook that lets you **extract non-reactive logic** from your Effects into a reusable function called an [Effect Event](https://react.dev/learn/separating-events-from-effects#declaring-an-effect-event).
+
+Don't understand? Let's jump right into the example where we can see the need for this hook.
+
+---
+
+## 💬 Scenario
+
+Imagine you're building a simple chat room.  
+You want to show a "connected" notification when the user successfully connects to a room. The user can also change their name (`userName`) at any time.
+
+Here's how you might implement it at first:
+
+```tsx
+import { useEffect } from 'react';
+import { createConnection } from './chat.js';
+import { showNotification } from './notifications.js';
+
+const serverUrl = 'https://localhost:1234';
+
+function ChatRoom({ roomId, userName }) {
+  useEffect(() => {
+    const connection = createConnection(serverUrl, roomId);
+    connection.on('connected', () => {
+      showNotification(`Hi ${userName}, you are now connected!`);
+    });
+    connection.connect();
+    return () => connection.disconnect();
+  }, [roomId, userName]);
+}
+```
+
+## 🤔 What's the problem?
+
+At first glance, this looks fine — but there's a subtle issue.
+When the `userName` changes, the effect re-runs. This means the component disconnects and reconnects to the server unnecessarily.
+Also, the “Connected!” notification will show again, even though the user was already connected.
+
+You might be tempted to fix it like this:
+```tsx
+function ChatRoom({ roomId, userName }) {
+  useEffect(() => {
+    const connection = createConnection(serverUrl, roomId);
+    connection.on('connected', () => {
+      showNotification(`Hi ${userName}, you are now connected!`);
+    });
+    connection.connect();
+    return () => connection.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId]);
+}
+```
+
+
+But this introduces another problem — the effect won't re-run when `userName` changes, so it will display an outdated name if the user connects to a new room later.
+
+
+## 💡 The Solution: `useEffectEvent`
+
+Here's how we can fix the problems elegantly:
+```tsx
+import { useEffect, useEffectEvent } from 'react';
+import { createConnection } from './chat.js';
+import { showNotification } from './notifications.js';
+
+const serverUrl = 'https://localhost:1234';
+
+function ChatRoom({ roomId, userName }) {
+  const onConnected = useEffectEvent(() => {
+    showNotification(`Hi ${userName}, you are now connected!`);
+  });
+
+  useEffect(() => {
+    const connection = createConnection(serverUrl, roomId);
+    connection.on('connected', () => {
+      onConnected();
+    });
+    connection.connect();
+    return () => connection.disconnect();
+  }, [roomId]);
+
+  return <h1>Welcome to the {roomId} room!</h1>;
+}
+```
+
+Now, the effect only depends on `roomId`, so it runs when the user joins a new room — not when they simply change their name.
+At the same time, the `onConnected` always sees the latest `userName`, even though it's not part of the dependency array.
+
+This is exactly what `useEffectEvent` is for: keeping your Effects stable while still using fresh values.
+
+## 🧰 Without `useEffectEvent`
+
+Before React **19.2.0**, You would have to rely on a `ref` to store the latest value manually:
+
+```tsx
+import { useEffect, useRef } from 'react';
+import { createConnection } from './chat.js';
+import { showNotification } from './notifications.js';
+
+const serverUrl = 'https://localhost:1234';
+
+function ChatRoom({ roomId, userName }) {
+  const lastUserNameRef = useRef(userName);
+  lastUserNameRef.current = userName;
+
+  useEffect(() => {
+    const connection = createConnection(serverUrl, roomId);
+    connection.on('connected', () => {
+      showNotification(`Hi ${lastUserNameRef.current}, you are now connected!`);
+    });
+    connection.connect();
+    return () => connection.disconnect();
+  }, [roomId]);
+}
+```
+
+It works — but it's verbose, error-prone, and not very intuitive.
+`useEffectEvent` provides a cleaner way to achieve the same thing.
+
+
+## 🌍 Another Example
+
+This pattern isn't just for chat apps. You can use it anytime you want your effect to run only when certain data changes — but still read the most up-to-date state inside the effect.
+
+```tsx
+function Page({ url }) {
+  const { items } = useContext(ShoppingCartContext);
+  const numberOfItems = items.length;
+
+  const onVisit = useEffectEvent((visitedUrl) => {
+    logVisit(visitedUrl, numberOfItems);
+  });
+
+  useEffect(() => {
+    onVisit(url);
+  }, [url]); // ✅ Only runs when URL changes
+}
+```
+
+Here, the effect runs when the `url` changes, but the event callback always uses the latest `numberOfItems` from context — no stale data, no extra effect runs.
+
+## 📚 Conclusion
+With `useEffectEvent`, you can extract the non-reactive logic from your Effects into Effect Events.
+The hook helps developers access the latest reactive values without unnecessarily re-running the effect.
+With this small addition to our toolbelt, we can improve readability and performance of our code.
+
+
+Thank you for reading!
+
+## 🔗 References
+- [Official useEffectEvent documentation](https://react.dev/reference/react/useEffectEvent)
+- [LogRocket article about useEffectEvent](https://blog.logrocket.com/react-useeffectevent)
